@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { authAPI } from '../services/api';
+import { authApi } from '../services/api';
 
 const VerifyEmail = () => {
     const [searchParams] = useSearchParams();
@@ -19,7 +19,7 @@ const VerifyEmail = () => {
 
         const verifyEmail = async () => {
             try {
-                const response = await authAPI.verifyEmail(token);
+                const response = await authApi.verifyEmail(token);
                 setStatus('success');
                 setMessage(response.data);
 

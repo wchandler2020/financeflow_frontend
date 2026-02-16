@@ -40,7 +40,7 @@ api.interceptors.response.use(
 );
 
 // Auth API calls
-export const authAPI = {
+export const authApi = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
   verifyEmail: (token) => api.get(`/auth/verify?token=${token}`),
@@ -48,7 +48,7 @@ export const authAPI = {
 };
 
 // Account API calls
-export const accountAPI = {
+export const accountApi = {
   getAll: () => api.get('/accounts'),
   getById: (id) => api.get(`/accounts/${id}`),
   create: (data) => api.post('/accounts', data),
@@ -58,7 +58,7 @@ export const accountAPI = {
 };
 
 // Category API calls
-export const categoryAPI = {
+export const categoryApi = {
   getAll: () => api.get('/categories'),
   getByType: (type) => api.get(`/categories?type=${type}`),
   getById: (id) => api.get(`/categories/${id}`),
@@ -68,7 +68,7 @@ export const categoryAPI = {
 };
 
 // Transaction API calls
-export const transactionAPI = {
+export const transactionApi = {
   getAll: (params) => api.get('/transactions', { params }),
   getById: (id) => api.get(`/transactions/${id}`),
   create: (data) => api.post('/transactions', data),
