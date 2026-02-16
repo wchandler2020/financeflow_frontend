@@ -13,6 +13,19 @@ import {
   FiBarChart2
 } from 'react-icons/fi';
 
+const greeating = () => {
+  const currentHour = new Date().getHours()
+  if (currentHour < 12) {
+    return 'Good Morning'
+  } else if (currentHour < 17) {
+    return 'Good Afternoon'
+  } else {
+    return 'Good Evening'
+  }
+}
+
+
+
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const { user, logout } = useAuth();
@@ -33,6 +46,8 @@ const Layout = ({ children }) => {
   ];
 
   const isActive = (path) => location.pathname === path;
+
+  console.log('DA USER: ', user)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -93,13 +108,13 @@ const Layout = ({ children }) => {
                 <p className="text-sm font-medium text-gray-900 truncate">
                   {user?.fullName}
                 </p>
-                <p className="text-sm text-gray-500 truncate">
-                  {user?.email}
+                <p className="text-sm text-gray-500 truncate font-semibold">
+                  {`${greeating()}, ${user?.fullname.split(' ')[0]}`}
                 </p>
               </div>
               <button
                 onClick={handleLogout}
-                className="ml-3 p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="ml-3 p-2 text-red-400 hover:text-red-600 transition-colors"
                 title="Logout"
               >
                 <FiLogOut className="w-5 h-5" />
