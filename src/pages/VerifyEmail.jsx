@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { authAPI } from '../services/api';
 
+// Verify Email Component
 const VerifyEmail = () => {
     const [searchParams] = useSearchParams();
     const [status, setStatus] = useState('verifying');
