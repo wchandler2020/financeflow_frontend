@@ -1,4 +1,5 @@
 {
+  "homepage": "https://wchandler2020.github.io/financeflow_frontend",
   "name": "financeflow_frontend",
   "version": "0.1.0",
   "private": true,
@@ -23,7 +24,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deploy": "g-pages -d build"
   },
   "eslintConfig": {
     "extends": [
@@ -45,6 +47,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.24",
+    "gh-pages": "^6.3.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.19"
   }
