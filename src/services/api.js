@@ -40,7 +40,7 @@ api.interceptors.response.use(
 );
 
 // Auth API calls
-export const authApi = {
+export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
   verifyEmail: (token) => api.get(`/auth/verify?token=${token}`),

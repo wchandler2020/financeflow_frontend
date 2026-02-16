@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { authApi } from '../services/api';
+import { authAPI } from '../services/api';
 
 export const AuthContext = createContext();
 
@@ -12,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
-   
+
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
@@ -22,15 +22,15 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const response = await authApi.login(credentials);
+      const response = await authAPI.login(credentials);
       const { token, ...userData } = response.data;
-     
+
       setToken(token);
       setUser(userData);
-     
+
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
-     
+
       return { success: true };
     } catch (error) {
       return {
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await authApi.register(userData);
+      const response = await authAPI.register(userData);
       return {
         success: true,
         message: response.data.message
