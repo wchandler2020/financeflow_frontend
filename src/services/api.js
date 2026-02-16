@@ -40,7 +40,7 @@ api.interceptors.response.use(
 );
 
 // Auth API calls
-export const authAPI = {
+export const authAPI = {  // ← Change to uppercase
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
   verifyEmail: (token) => api.get(`/auth/verify?token=${token}`),
