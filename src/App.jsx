@@ -12,6 +12,7 @@ import Accounts from './pages/Accounts';
 import Transactions from './pages/Transactions';
 import Budgets from './pages/Budgets';
 import Analytics from './pages/Analytics';
+import VerifyEmail from './pages/VerifyEmail';
 
 // Create React Query client
 const queryClient = new QueryClient({
@@ -49,6 +50,15 @@ function App() {
                 <PublicRoute>
                   <Login />
                 </PublicRoute>
+              }
+            />
+            <Route
+              path="/verify"
+              element={
+                <PublicRoute>
+                  <VerifyEmail />
+                </PublicRoute>
+
               }
             />
             <Route
