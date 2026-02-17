@@ -96,4 +96,9 @@ export const analyticsAPI = {
   getTopSpendingMonths: (limit = 5) => api.get(`/analytics/top-spending-months?limit=${limit}`),
 };
 
+// AI Advisor API calls
+export const aiAdvisorAPI = {
+  chat: (message) => api.post('/ai-advisor/chat', { message }),
+};
+
 export default api;
