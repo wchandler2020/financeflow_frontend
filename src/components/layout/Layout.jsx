@@ -6,6 +6,7 @@ import {
   FiHome, FiCreditCard, FiTrendingUp, FiTarget,
   FiBarChart2, FiLogOut, FiMenu, FiX
 } from 'react-icons/fi';
+import Footer from './Footer';
 
 const greeting = () => {
   const h = new Date().getHours();
@@ -169,6 +170,8 @@ const Layout = ({ children }) => {
         >
           {children}
         </motion.main>
+
+        <Footer />
       </div>
     </div>
   );
