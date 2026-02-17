@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Layout from '../components/layout/Layout';
 import { useAccounts } from '../hooks/useAccounts';
 import { useTransactions, useTransactionSummary, useSpendingByCategory } from '../hooks/useTransactions';
@@ -7,67 +8,71 @@ import { formatCurrency, formatDate } from '../utils/formatters';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiPlusCircle, FiArrowRight } from 'react-icons/fi';
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i) => ({
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.08, duration: 0.4, ease: 'easeOut' }
+  }),
+};
+
 const Dashboard = () => {
   const { data: accounts, isLoading: accountsLoading } = useAccounts();
-  const { data: transactions, isLoading: transactionsLoading } = useTransactions();
+  const { data: transactions } = useTransactions();
   const { data: summary, isLoading: summaryLoading } = useTransactionSummary();
-  const { data: categorySpending, isLoading: categoryLoading } = useSpendingByCategory();
+  const { data: categorySpending } = useSpendingByCategory();
 
-  // Debug logging
-  React.useEffect(() => {
-    if (summary) {
-      console.log('Summary data:', summary);
-      console.log('Total Income:', summary?.totalIncome);
-      console.log('Total Expenses:', summary?.totalExpenses);
-    }
-  }, [summary]);
-
-  // Calculate total balance
-  const totalBalance = accounts?.reduce((sum, account) => sum + parseFloat(account.balance), 0) || 0;
-
-  // Get summary values with fallbacks
+  const totalBalance = accounts?.reduce((sum, a) => sum + parseFloat(a.balance), 0) || 0;
   const totalIncome = summary?.totalIncome ?? summary?.income ?? 0;
   const totalExpenses = summary?.totalExpenses ?? summary?.expenses ?? 0;
 
-  // Prepare chart data
   const chartData = categorySpending?.slice(0, 5).map(cat => ({
     name: cat.categoryName,
     value: parseFloat(cat.totalAmount),
   })) || [];
+  const COLORS = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899'];
 
-  const COLORS = ['#8b5cf6', '#3b82f6', '#ec4899', '#f59e0b', '#10b981'];
+  const stats = [
+    { label: 'Total Balance', value: formatCurrency(totalBalance), icon: FiDollarSign, color: 'indigo', bg: 'bg-indigo-50', text: 'text-indigo-600', iconBg: 'bg-indigo-100' },
+    { label: 'Total Income', value: formatCurrency(totalIncome), icon: FiTrendingUp, color: 'emerald', bg: 'bg-emerald-50', text: 'text-emerald-600', iconBg: 'bg-emerald-100' },
+    { label: 'Total Expenses', value: formatCurrency(totalExpenses), icon: FiTrendingDown, color: 'red', bg: 'bg-red-50', text: 'text-red-600', iconBg: 'bg-red-100' },
+  ];
 
-  // Loading state
   if (accountsLoading || summaryLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
-            <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading your dashboard...</p>
+            <div className="w-10 h-10 border-2 border-slate-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-slate-500 text-sm">Loading your dashboard...</p>
           </div>
         </div>
       </Layout>
     );
   }
 
-  // Empty state
   if (!accounts || accounts.length === 0) {
     return (
       <Layout>
-        <div className="text-center py-20">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-primary-100 rounded-full mb-6">
-            <FiDollarSign className="w-10 h-10 text-primary-600" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center py-24"
+        >
+          <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+            <FiDollarSign className="w-8 h-8 text-indigo-500" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">No Accounts Yet</h3>
-          <p className="text-gray-600 mb-6 max-w-md mx-auto">
-            Get started by creating your first account to begin tracking your finances.
+          <h3 className="text-2xl font-bold text-slate-900 mb-2">No accounts yet</h3>
+          <p className="text-slate-500 mb-7 max-w-sm mx-auto text-sm">
+            Create your first account to start tracking your finances.
           </p>
-          <Link to="/accounts" className="btn-primary inline-flex items-center">
-            <FiPlusCircle className="mr-2" />
-            Create Your First Account
+          <Link to="/accounts"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-colors"
+          >
+            <FiPlusCircle className="w-4 h-4" />
+            Create your first account
           </Link>
-        </div>
+        </motion.div>
       </Layout>
     );
   }
@@ -76,200 +81,162 @@ const Dashboard = () => {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="mt-1 text-gray-500">Your financial overview at a glance</p>
-          </div>
-        </div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+          <p className="text-slate-500 text-sm mt-0.5">Your financial overview at a glance</p>
+        </motion.div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Total Balance */}
-          <div className="card group hover:shadow-lg transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Balance</p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
-                  {formatCurrency(totalBalance)}
-                </p>
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {stats.map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              custom={i}
+              initial="hidden"
+              animate="visible"
+              variants={cardVariants}
+              whileHover={{ y: -2, boxShadow: '0 10px 30px rgba(0,0,0,0.08)' }}
+              className="bg-white rounded-2xl p-6 border border-slate-100"
+              style={{ cursor: 'default' }}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{stat.label}</p>
+                  <p className={`text-2xl font-bold mt-2 ${stat.text}`}>{stat.value}</p>
+                </div>
+                <div className={`${stat.iconBg} p-3 rounded-xl`}>
+                  <stat.icon className={`w-6 h-6 ${stat.text}`} />
+                </div>
               </div>
-              <div className="p-4 bg-primary-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                <FiDollarSign className="w-8 h-8 text-primary-600" />
-              </div>
-            </div>
-          </div>
-
-          {/* Total Income */}
-          <div className="card group hover:shadow-lg transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Income</p>
-                <p className="mt-2 text-3xl font-bold text-green-600">
-                  {formatCurrency(totalIncome)}
-                </p>
-              </div>
-              <div className="p-4 bg-green-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                <FiTrendingUp className="w-8 h-8 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          {/* Total Expenses */}
-          <div className="card group hover:shadow-lg transition-all duration-300">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Expenses</p>
-                <p className="mt-2 text-3xl font-bold text-red-600">
-                  {formatCurrency(totalExpenses)}
-                </p>
-              </div>
-              <div className="p-4 bg-red-100 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                <FiTrendingDown className="w-8 h-8 text-red-600" />
-              </div>
-            </div>
-          </div>
+            </motion.div>
+          ))}
         </div>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Accounts Overview */}
-          <div className="card">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Accounts</h2>
-              <Link 
-                to="/accounts" 
-                className="text-sm font-medium text-primary-600 hover:text-primary-700 inline-flex items-center group"
-              >
-                View all
-                <FiArrowRight className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {/* Accounts */}
+          <motion.div
+            custom={3}
+            initial="hidden"
+            animate="visible"
+            variants={cardVariants}
+            className="bg-white rounded-2xl p-6 border border-slate-100"
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="font-bold text-slate-900">Accounts</h2>
+              <Link to="/accounts" className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 group">
+                View all <FiArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </div>
-            <div className="space-y-3">
-              {accounts?.slice(0, 5).map((account) => (
-                <div
+            <div className="space-y-2">
+              {accounts?.slice(0, 5).map((account, i) => (
+                <motion.div
                   key={account.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 + i * 0.06 }}
+                  className="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
                 >
                   <div>
-                    <p className="font-semibold text-gray-900">{account.name}</p>
-                    <p className="text-sm text-gray-500">{account.type}</p>
+                    <p className="font-semibold text-slate-900 text-sm">{account.name}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{account.type}</p>
                   </div>
-                  <p className="text-lg font-bold text-gray-900">
-                    {formatCurrency(account.balance)}
-                  </p>
-                </div>
+                  <p className="font-bold text-slate-900 text-sm">{formatCurrency(account.balance)}</p>
+                </motion.div>
               ))}
-              {accounts?.length === 0 && (
-                <p className="text-center text-gray-500 py-8">No accounts yet</p>
-              )}
             </div>
-          </div>
+          </motion.div>
 
-          {/* Spending by Category */}
-          <div className="card">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Top Spending Categories</h2>
-            {categorySpending && categorySpending.length > 0 ? (
-              <div className="h-64">
+          {/* Spending Chart */}
+          <motion.div
+            custom={4}
+            initial="hidden"
+            animate="visible"
+            variants={cardVariants}
+            className="bg-white rounded-2xl p-6 border border-slate-100"
+          >
+            <h2 className="font-bold text-slate-900 mb-5">Spending by Category</h2>
+            {chartData.length > 0 ? (
+              <div className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie
-                      data={chartData}
-                      cx="50%"
-                      cy="50%"
+                    <Pie data={chartData} cx="50%" cy="50%"
                       labelLine={false}
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      dataKey="value"
-                      strokeWidth={2}
-                      stroke="#fff"
+                      outerRadius={80} dataKey="value" strokeWidth={2} stroke="#fff"
                     >
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      {chartData.map((_, idx) => (
+                        <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => formatCurrency(value)} />
+                    <Tooltip
+                      formatter={(v) => formatCurrency(v)}
+                      contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="flex items-center justify-center h-64 text-gray-500">
+              <div className="flex items-center justify-center h-56 text-slate-400 text-sm">
                 No spending data yet
               </div>
             )}
-          </div>
+          </motion.div>
         </div>
 
         {/* Recent Transactions */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Recent Transactions</h2>
-            <Link 
-              to="/transactions" 
-              className="text-sm font-medium text-primary-600 hover:text-primary-700 inline-flex items-center group"
-            >
-              View all
-              <FiArrowRight className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        <motion.div
+          custom={5}
+          initial="hidden"
+          animate="visible"
+          variants={cardVariants}
+          className="bg-white rounded-2xl border border-slate-100 overflow-hidden"
+        >
+          <div className="flex items-center justify-between p-6 border-b border-slate-50">
+            <h2 className="font-bold text-slate-900">Recent Transactions</h2>
+            <Link to="/transactions" className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 group">
+              View all <FiArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full">
               <thead>
-                <tr className="bg-gray-50">
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Account
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Amount
-                  </th>
+                <tr className="bg-slate-50">
+                  {['Date', 'Description', 'Category', 'Account', 'Amount'].map(h => (
+                    <th key={h} className={`px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider ${h === 'Amount' ? 'text-right' : 'text-left'}`}>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {transactions?.slice(0, 5).map((transaction) => (
-                  <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(transaction.transactionDate)}
+              <tbody className="divide-y divide-slate-50">
+                {transactions?.slice(0, 5).map((t, i) => (
+                  <motion.tr
+                    key={t.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 + i * 0.05 }}
+                    className="hover:bg-slate-50 transition-colors"
+                  >
+                    <td className="px-5 py-3.5 text-sm text-slate-600 whitespace-nowrap">{formatDate(t.transactionDate)}</td>
+                    <td className="px-5 py-3.5 text-sm font-medium text-slate-900">{t.description || '-'}</td>
+                    <td className="px-5 py-3.5 text-sm text-slate-500 whitespace-nowrap">
+                      {t.categoryIcon && <span className="mr-1.5">{t.categoryIcon}</span>}
+                      {t.categoryName}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                      {transaction.description || '-'}
+                    <td className="px-5 py-3.5 text-sm text-slate-500 whitespace-nowrap">{t.accountName}</td>
+                    <td className={`px-5 py-3.5 text-sm font-bold text-right whitespace-nowrap ${t.type === 'CREDIT' ? 'text-emerald-600' : 'text-red-500'}`}>
+                      {t.type === 'CREDIT' ? '+' : '-'}{formatCurrency(t.amount)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      <span className="inline-flex items-center">
-                        {transaction.categoryIcon && (
-                          <span className="mr-2">{transaction.categoryIcon}</span>
-                        )}
-                        {transaction.categoryName}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {transaction.accountName}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-bold ${
-                      transaction.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {transaction.type === 'CREDIT' ? '+' : '-'}
-                      {formatCurrency(transaction.amount)}
-                    </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
             {(!transactions || transactions.length === 0) && (
-              <div className="text-center py-12 text-gray-500">
-                No transactions yet. Create your first transaction!
-              </div>
+              <p className="text-center py-10 text-slate-400 text-sm">No transactions yet</p>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
     </Layout>
   );
