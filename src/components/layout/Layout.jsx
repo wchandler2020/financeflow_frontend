@@ -125,12 +125,11 @@ const Layout = ({ children }) => {
         {/* User section */}
         <div className="p-3 border-t border-slate-100">
           <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
-            <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center font-semibold text-indigo-700 text-xs flex-shrink-0">
+            {/* <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center font-semibold text-indigo-700 text-xs flex-shrink-0">
               {initials}
-            </div>
+            </div> */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-slate-900 truncate">{user?.fullName}</p>
-              <p className="text-xs text-slate-400 truncate">{greeting()}</p>
+              <p className="text-sm font-semibold text-slate-900 truncate">{greeting()}, {user?.fullName.split(' ')[0]}</p>
             </div>
             <button
               onClick={handleLogout}
