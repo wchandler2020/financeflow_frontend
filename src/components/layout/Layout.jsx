@@ -6,7 +6,7 @@ import { useTheme } from '../../components/theme/ThemeContext';
 import {
   FiHome, FiCreditCard, FiTrendingUp, FiTarget,
   FiBarChart2, FiLogOut, FiMenu, FiX, FiMessageSquare,
-  FiSun, FiMoon,
+  FiSun, FiMoon, FiCamera,
 } from 'react-icons/fi';
 import Footer from '../footer/Footer';
 
@@ -24,6 +24,7 @@ const navigation = [
   { name: 'Budgets', href: '/budgets', icon: FiTarget },
   { name: 'Analytics', href: '/analytics', icon: FiBarChart2 },
   { name: 'AI Advisor', href: '/ai-advisor', icon: FiMessageSquare },
+  { name: 'Receipt Scanner', path: '/receipt-scanner', icon: FiCamera },
 ];
 
 const navItemVariants = {

@@ -16,6 +16,7 @@ import Budgets from './pages/Budgets';
 import Analytics from './pages/Analytics';
 import VerifyEmail from './pages/VerifyEmail';
 import AIAdvisor from './pages/AIAdvisor';
+import ReceiptScanner from './pages/ReceiptScanner';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +60,7 @@ function App() {
               <Route path="/budgets" element={<ProtectedRoute><Budgets /></ProtectedRoute>} />
               <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
               <Route path='/ai-advisor' element={<ProtectedRoute><AIAdvisor /></ProtectedRoute>} />
+              <Route path='/receipt-scanner' element={<ProtectedRoute><ReceiptScanner /></ProtectedRoute>} />
 
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/" />} />
