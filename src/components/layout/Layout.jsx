@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { href, Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../components/theme/ThemeContext';
@@ -24,7 +24,7 @@ const navigation = [
   { name: 'Budgets', href: '/budgets', icon: FiTarget },
   { name: 'Analytics', href: '/analytics', icon: FiBarChart2 },
   { name: 'AI Advisor', href: '/ai-advisor', icon: FiMessageSquare },
-  { name: 'Receipt Scanner', path: '/receipt-scanner', icon: FiCamera },
+  { name: 'Receipt Scanner', href: '/receipt-scanner', icon: FiCamera },
 ];
 
 const navItemVariants = {
