@@ -2,10 +2,14 @@ import React, { useState, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { transactionApi } from '../services/api';
-import { FiUpload, FiCamera, FiX, FiCheck } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiUpload, FiCamera, FiX, FiCheck, FiFileText } from 'react-icons/fi';
+import Layout from '../components/layout/Layout';
+import { useTheme } from '../components/theme/ThemeContext';
 import axios from 'axios';
 
 const ReceiptScanner = () => {
+    const { isDark } = useTheme();
     const [selectedFile, setSelectedFile] = useState(null);
     const [preview, setPreview] = useState(null);
     const [extractedData, setExtractedData] = useState(null);
@@ -15,12 +19,10 @@ const ReceiptScanner = () => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
 
-    // Scan receipt mutation
     const scanMutation = useMutation({
         mutationFn: async (file) => {
             const formData = new FormData();
             formData.append('file', file);
-
             const token = localStorage.getItem('token');
             const response = await axios.post(
                 `${process.env.REACT_APP_API_URL || 'http://localhost:8080/api'}/receipts/scan`,
@@ -34,16 +36,10 @@ const ReceiptScanner = () => {
             );
             return response.data;
         },
-        onSuccess: (data) => {
-            setExtractedData(data);
-        },
-        onError: (error) => {
-            console.error('Scan error:', error);
-            alert('Failed to scan receipt. Please try again.');
-        },
+        onSuccess: (data) => setExtractedData(data),
+        onError: () => alert('Failed to scan receipt. Please try again.'),
     });
 
-    // Create transaction mutation
     const createTransactionMutation = useMutation({
         mutationFn: transactionApi.create,
         onSuccess: () => {
@@ -55,69 +51,32 @@ const ReceiptScanner = () => {
 
     const handleFileSelect = (file) => {
         if (!file) return;
-
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-            alert('Please select an image file');
-            return;
-        }
-
-        // Validate file size (10MB max)
-        if (file.size > 10 * 1024 * 1024) {
-            alert('File size must be less than 10MB');
-            return;
-        }
-
+        if (!file.type.startsWith('image/')) { alert('Please select an image file'); return; }
+        if (file.size > 10 * 1024 * 1024) { alert('File size must be less than 10MB'); return; }
         setSelectedFile(file);
         setExtractedData(null);
-
-        // Create preview
         const reader = new FileReader();
-        reader.onloadend = () => {
-            setPreview(reader.result);
-        };
+        reader.onloadend = () => setPreview(reader.result);
         reader.readAsDataURL(file);
     };
 
     const handleDrop = (e) => {
         e.preventDefault();
         setIsDragging(false);
-        const file = e.dataTransfer.files[0];
-        handleFileSelect(file);
-    };
-
-    const handleDragOver = (e) => {
-        e.preventDefault();
-        setIsDragging(true);
-    };
-
-    const handleDragLeave = () => {
-        setIsDragging(false);
-    };
-
-    const handleScanReceipt = () => {
-        if (selectedFile) {
-            scanMutation.mutate(selectedFile);
-        }
+        handleFileSelect(e.dataTransfer.files[0]);
     };
 
     const handleSaveTransaction = async () => {
         if (!extractedData) return;
-
-        // You'll need to get accountId from user selection
-        // For now, we'll need to add account selection
-        const accountId = prompt('Enter account ID:'); // Temporary - we'll improve this
-
-        const transactionData = {
+        const accountId = prompt('Enter account ID:');
+        createTransactionMutation.mutate({
             accountId: parseInt(accountId),
-            categoryId: extractedData.categoryId || 1, // Will need to map category name to ID
+            categoryId: extractedData.categoryId || 1,
             amount: extractedData.amount,
             transactionType: 'DEBIT',
             description: extractedData.description,
             transactionDate: extractedData.date,
-        };
-
-        createTransactionMutation.mutate(transactionData);
+        });
     };
 
     const handleReset = () => {
@@ -127,156 +86,219 @@ const ReceiptScanner = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-xl shadow-md p-6">
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">AI Receipt Scanner</h1>
-                <p className="text-gray-600 mb-6">Upload a receipt and let AI extract the transaction details</p>
+        <Layout>
+            <div className="flex flex-col h-[calc(100vh-10rem)] rounded-2xl overflow-hidden border border-slate-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm transition-colors duration-300">
 
-                {/* Upload Area */}
-                {!selectedFile && (
+                {/* ── Header ── */}
+                <div className="flex items-center gap-4 px-6 py-4 border-b border-slate-100 dark:border-gray-800 bg-white dark:bg-gray-900">
                     <div
-                        onDrop={handleDrop}
-                        onDragOver={handleDragOver}
-                        onDragLeave={handleDragLeave}
-                        className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors ${isDragging
-                            ? 'border-primary-500 bg-primary-50'
-                            : 'border-gray-300 hover:border-primary-400'
-                            }`}
+                        className="p-2.5 rounded-xl"
+                        style={{ background: 'linear-gradient(135deg,#7c3aed22,#c026d322)' }}
                     >
-                        <FiUpload className="mx-auto text-5xl text-gray-400 mb-4" />
-                        <p className="text-lg font-medium text-gray-700 mb-2">
-                            Drag & drop your receipt here
-                        </p>
-                        <p className="text-sm text-gray-500 mb-6">or</p>
+                        <FiFileText className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-bold text-slate-900 dark:text-white">AI Receipt Scanner</h1>
+                        <p className="text-xs text-slate-400 dark:text-slate-500">Powered by GPT-4 · Upload a receipt to extract transaction details</p>
+                    </div>
+                    <div className="ml-auto flex items-center gap-1.5">
+                        <span className="relative flex h-2.5 w-2.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                        </span>
+                        <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Online</span>
+                    </div>
+                </div>
 
-                        <div className="flex justify-center space-x-4">
-                            <button
+                {/* ── Body ── */}
+                <div className="flex-1 overflow-y-auto px-5 py-6 bg-slate-50 dark:bg-gray-950 transition-colors duration-300">
+                    <AnimatePresence mode="wait">
+
+                        {/* Upload dropzone */}
+                        {!selectedFile && (
+                            <motion.div
+                                key="dropzone"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -12 }}
+                                transition={{ duration: 0.25 }}
+                                onDrop={handleDrop}
+                                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                                onDragLeave={() => setIsDragging(false)}
+                                className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-14 text-center transition-all duration-200 cursor-pointer
+                                    ${isDragging
+                                        ? 'border-violet-400 dark:border-violet-500 bg-violet-50 dark:bg-violet-900/10'
+                                        : 'border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-violet-300 dark:hover:border-violet-600'
+                                    }`}
                                 onClick={() => fileInputRef.current?.click()}
-                                className="btn-secondary flex items-center space-x-2"
                             >
-                                <FiUpload />
-                                <span>Browse Files</span>
-                            </button>
-
-                            <button
-                                onClick={() => cameraInputRef.current?.click()}
-                                className="btn-primary flex items-center space-x-2"
-                            >
-                                <FiCamera />
-                                <span>Take Photo</span>
-                            </button>
-                        </div>
-
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleFileSelect(e.target.files[0])}
-                            className="hidden"
-                        />
-
-                        <input
-                            ref={cameraInputRef}
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            onChange={(e) => handleFileSelect(e.target.files[0])}
-                            className="hidden"
-                        />
-
-                        <p className="text-xs text-gray-400 mt-6">
-                            Supported formats: JPG, PNG, HEIC • Max size: 10MB
-                        </p>
-                    </div>
-                )}
-
-                {/* Preview & Results */}
-                {selectedFile && (
-                    <div className="space-y-6">
-                        {/* Image Preview */}
-                        <div className="relative">
-                            <img
-                                src={preview}
-                                alt="Receipt preview"
-                                className="w-full h-64 object-contain bg-gray-50 rounded-lg"
-                            />
-                            <button
-                                onClick={handleReset}
-                                className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
-                            >
-                                <FiX />
-                            </button>
-                        </div>
-
-                        {/* Scan Button */}
-                        {!extractedData && !scanMutation.isPending && (
-                            <button
-                                onClick={handleScanReceipt}
-                                className="btn-primary w-full py-3 text-lg"
-                            >
-                                <FiCamera className="inline mr-2" />
-                                Scan Receipt with AI
-                            </button>
-                        )}
-
-                        {/* Loading */}
-                        {scanMutation.isPending && (
-                            <div className="text-center py-8">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-                                <p className="text-gray-600">AI is analyzing your receipt...</p>
-                            </div>
-                        )}
-
-                        {/* Extracted Data */}
-                        {extractedData && (
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                                <div className="flex items-center mb-4">
-                                    <FiCheck className="text-green-600 text-2xl mr-2" />
-                                    <h3 className="text-lg font-semibold text-green-900">
-                                        Receipt Scanned Successfully!
-                                    </h3>
+                                <div
+                                    className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
+                                    style={{ background: 'linear-gradient(135deg,#7c3aed22,#c026d322)' }}
+                                >
+                                    <FiUpload className="w-7 h-7 text-violet-600 dark:text-violet-400" />
                                 </div>
+                                <p className="text-base font-semibold text-slate-700 dark:text-slate-200 mb-1">
+                                    Drag &amp; drop your receipt here
+                                </p>
+                                <p className="text-sm text-slate-400 dark:text-slate-500 mb-6">or choose an option below</p>
 
-                                <div className="grid grid-cols-2 gap-4 mb-6">
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700">Merchant</label>
-                                        <p className="text-lg font-semibold text-gray-900">{extractedData.merchantName}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700">Amount</label>
-                                        <p className="text-lg font-semibold text-gray-900">${extractedData.amount}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700">Date</label>
-                                        <p className="text-lg font-semibold text-gray-900">{extractedData.date}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700">Category</label>
-                                        <p className="text-lg font-semibold text-gray-900">{extractedData.category}</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex space-x-4">
-                                    <button
-                                        onClick={handleSaveTransaction}
-                                        disabled={createTransactionMutation.isPending}
-                                        className="btn-primary flex-1"
+                                <div className="flex gap-3">
+                                    <motion.button
+                                        whileHover={{ scale: 1.03 }}
+                                        whileTap={{ scale: 0.97 }}
+                                        onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-slate-700 dark:text-slate-200 hover:border-violet-300 dark:hover:border-violet-600 hover:text-violet-700 dark:hover:text-violet-300 transition-all duration-200 shadow-sm"
                                     >
-                                        {createTransactionMutation.isPending ? 'Saving...' : 'Save Transaction'}
-                                    </button>
-                                    <button
+                                        <FiUpload className="w-4 h-4" />
+                                        Browse Files
+                                    </motion.button>
+
+                                    <motion.button
+                                        whileHover={{ scale: 1.03 }}
+                                        whileTap={{ scale: 0.97 }}
+                                        onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }}
+                                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white shadow-md transition-all duration-200"
+                                        style={{ background: 'linear-gradient(135deg, #7c3aed, #9333ea)', boxShadow: '0 4px 14px rgba(124,58,237,0.35)' }}
+                                    >
+                                        <FiCamera className="w-4 h-4" />
+                                        Take Photo
+                                    </motion.button>
+                                </div>
+
+                                <p className="text-xs text-slate-400 dark:text-slate-600 mt-6">
+                                    Supported formats: JPG, PNG, HEIC · Max size: 10MB
+                                </p>
+
+                                <input ref={fileInputRef} type="file" accept="image/*" onChange={(e) => handleFileSelect(e.target.files[0])} className="hidden" />
+                                <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={(e) => handleFileSelect(e.target.files[0])} className="hidden" />
+                            </motion.div>
+                        )}
+
+                        {/* Preview + results */}
+                        {selectedFile && (
+                            <motion.div
+                                key="preview"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -12 }}
+                                transition={{ duration: 0.25 }}
+                                className="space-y-5"
+                            >
+                                {/* Image preview card */}
+                                <div className="relative rounded-2xl overflow-hidden border border-slate-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+                                    <img
+                                        src={preview}
+                                        alt="Receipt preview"
+                                        className="w-full h-64 object-contain bg-slate-50 dark:bg-gray-900"
+                                    />
+                                    <motion.button
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.9 }}
                                         onClick={handleReset}
-                                        className="btn-secondary"
+                                        className="absolute top-3 right-3 p-1.5 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-md transition-colors duration-200"
                                     >
-                                        Scan Another
-                                    </button>
+                                        <FiX className="w-3.5 h-3.5" />
+                                    </motion.button>
                                 </div>
-                            </div>
+
+                                {/* Scan button */}
+                                {!extractedData && !scanMutation.isPending && (
+                                    <motion.button
+                                        whileHover={{ scale: 1.01 }}
+                                        whileTap={{ scale: 0.99 }}
+                                        onClick={() => scanMutation.mutate(selectedFile)}
+                                        className="w-full py-3.5 rounded-xl text-sm font-semibold text-white shadow-md transition-all duration-200 flex items-center justify-center gap-2"
+                                        style={{ background: 'linear-gradient(135deg, #7c3aed, #9333ea)', boxShadow: '0 4px 14px rgba(124,58,237,0.4)' }}
+                                    >
+                                        <FiCamera className="w-4 h-4" />
+                                        Scan Receipt with AI
+                                    </motion.button>
+                                )}
+
+                                {/* Loading state */}
+                                {scanMutation.isPending && (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        className="flex flex-col items-center justify-center py-10 rounded-2xl border border-slate-100 dark:border-gray-700 bg-white dark:bg-gray-800"
+                                    >
+                                        <div className="relative w-12 h-12 mb-4">
+                                            <div className="absolute inset-0 rounded-full border-4 border-violet-100 dark:border-violet-900"></div>
+                                            <div className="absolute inset-0 rounded-full border-4 border-t-violet-500 animate-spin"></div>
+                                        </div>
+                                        <p className="text-sm font-medium text-slate-600 dark:text-slate-300">AI is analysing your receipt…</p>
+                                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">This usually takes a few seconds</p>
+                                    </motion.div>
+                                )}
+
+                                {/* Extracted data */}
+                                {extractedData && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="rounded-2xl border border-emerald-100 dark:border-emerald-900/40 bg-white dark:bg-gray-800 shadow-sm overflow-hidden"
+                                    >
+                                        {/* Success banner */}
+                                        <div className="flex items-center gap-3 px-5 py-3.5 bg-emerald-50 dark:bg-emerald-900/20 border-b border-emerald-100 dark:border-emerald-900/40">
+                                            <div className="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                                                <FiCheck className="w-3.5 h-3.5 text-white" />
+                                            </div>
+                                            <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Receipt scanned successfully!</p>
+                                        </div>
+
+                                        {/* Fields grid */}
+                                        <div className="grid grid-cols-2 gap-px bg-slate-100 dark:bg-gray-700 border-b border-slate-100 dark:border-gray-700">
+                                            {[
+                                                { label: 'Merchant', value: extractedData.merchantName },
+                                                { label: 'Amount', value: `$${extractedData.amount}` },
+                                                { label: 'Date', value: extractedData.date },
+                                                { label: 'Category', value: extractedData.category },
+                                            ].map(({ label, value }) => (
+                                                <div key={label} className="px-5 py-4 bg-white dark:bg-gray-800">
+                                                    <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">{label}</p>
+                                                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{value}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex gap-3 px-5 py-4">
+                                            <motion.button
+                                                whileHover={{ scale: 1.01 }}
+                                                whileTap={{ scale: 0.99 }}
+                                                onClick={handleSaveTransaction}
+                                                disabled={createTransactionMutation.isPending}
+                                                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white shadow-md transition-all duration-200 disabled:opacity-60"
+                                                style={{ background: 'linear-gradient(135deg, #7c3aed, #9333ea)', boxShadow: '0 4px 14px rgba(124,58,237,0.35)' }}
+                                            >
+                                                {createTransactionMutation.isPending ? 'Saving…' : 'Save Transaction'}
+                                            </motion.button>
+                                            <motion.button
+                                                whileHover={{ scale: 1.01 }}
+                                                whileTap={{ scale: 0.99 }}
+                                                onClick={handleReset}
+                                                className="px-4 py-2.5 rounded-xl text-sm font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-slate-600 dark:text-slate-300 hover:border-violet-300 dark:hover:border-violet-600 hover:text-violet-700 dark:hover:text-violet-300 transition-all duration-200"
+                                            >
+                                                Scan Another
+                                            </motion.button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </motion.div>
                         )}
-                    </div>
-                )}
+                    </AnimatePresence>
+                </div>
+
+                {/* ── Footer note ── */}
+                <div className="px-5 py-3 bg-white dark:bg-gray-900 border-t border-slate-100 dark:border-gray-800 transition-colors duration-300">
+                    <p className="text-center text-xs text-slate-400 dark:text-slate-600">
+                        AI extraction may not be perfectly accurate. Always verify amounts before saving.
+                    </p>
+                </div>
             </div>
-        </div>
+        </Layout>
     );
 };
 
